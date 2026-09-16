@@ -300,18 +300,18 @@ See [Styling](STYLING.md) for all variables, status and callout colors, theme sw
 
 ## Examples and contributing
 
-Install dependencies with **Nub 0.7.5** and **Node 24.11+**:
+Install dependencies with **Node 24.11+** and the repository's `./bun` wrapper, which downloads the pinned Bun version on first use:
 
 ```sh
-nub install
+./bun install
 ```
 
 Choose either example. They share stories, Markdown, and styling, with separate Storybook configurations. The MCP example sets `docs.defaultName: 'Reference'` to exercise custom docs names:
 
-| Example     | Configuration                         | Run                            | Build                         |
-| ----------- | ------------------------------------- | ------------------------------ | ----------------------------- |
-| Without MCP | [Default](example/.storybook/main.ts) | `nub run storybook` (6006)     | `nub run build-storybook`     |
-| With MCP    | [MCP](example/.storybook-mcp/main.ts) | `nub run storybook:mcp` (6007) | `nub run build-storybook:mcp` |
+| Example     | Configuration                         | Run                              | Build                           |
+| ----------- | ------------------------------------- | -------------------------------- | ------------------------------- |
+| Without MCP | [Default](example/.storybook/main.ts) | `./bun run storybook` (6006)     | `./bun run build-storybook`     |
+| With MCP    | [MCP](example/.storybook-mcp/main.ts) | `./bun run storybook:mcp` (6007) | `./bun run build-storybook:mcp` |
 
 The MCP example enables `manifests: true` and `@storybook/addon-mcp`. Connect your MCP client to `http://localhost:6007/mcp`. Static builds write to `storybook-static/` and `storybook-static-mcp/`, respectively. MCP is a development dependency for the example only; normal addon usage does not require it.
 

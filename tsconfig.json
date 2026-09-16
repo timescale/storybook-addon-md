@@ -22,6 +22,7 @@
     "test/**/*.tsx",
     "playwright.config.ts",
     "example/.storybook-mcp/*.ts",
-    "tsdown.config.ts"
+    "tsdown.config.ts",
+    "release.ts"
   ]
 }
