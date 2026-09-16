@@ -11,3 +11,5 @@ debug-storybook.log
 dist/
 example-markdown-generated/
 custom-doc-pages/
+
+download/

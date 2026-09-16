@@ -24,17 +24,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: nubjs/setup-nub@21b317c170eee658503996209cf87b63481be35a
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24
-          nub-version: 0.7.5
-      - run: nub install --frozen-lockfile --ignore-scripts
-      - run: nub run check
-      - run: nub run lint
-      - run: nub run format:check
-      - run: nub audit --audit-level=high
-      - run: nub run test
-      - run: nub run test:browser
+      - run: ./bun install --frozen-lockfile --ignore-scripts
+      - run: ./bun run check
+      - run: ./bun run lint
+      - run: ./bun run format:check
+      - run: ./bun audit --audit-level=high
+      - run: ./bun run test
+      - run: ./bun run test:browser
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: failure()
         with:
@@ -49,12 +48,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: nubjs/setup-nub@21b317c170eee658503996209cf87b63481be35a
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24
-          nub-version: 0.7.5
-      - run: nub install --frozen-lockfile --ignore-scripts
-      - run: nub run test:e2e
+      - run: ./bun install --frozen-lockfile --ignore-scripts
+      - run: ./bun run test:e2e
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
@@ -71,12 +69,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: nubjs/setup-nub@21b317c170eee658503996209cf87b63481be35a
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24
-          nub-version: 0.7.5
-      - run: nub install --frozen-lockfile --ignore-scripts
-      - run: nub run test:package
+      - run: ./bun install --frozen-lockfile --ignore-scripts
+      - run: ./bun run test:package
 
   verify:
     if: always()

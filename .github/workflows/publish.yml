@@ -1,0 +1,25 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - v*.*.*
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish-npm:
+    name: Publish package to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+      - run: ./bun install --frozen-lockfile --ignore-scripts
+      - run: ./bun x "npm@>=11.5.1" publish

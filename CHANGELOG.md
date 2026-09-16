@@ -1,5 +1,7 @@
 # storybook-addon-md
 
+Versions after 0.9.0 are published as `@tigerdata/storybook-addon-md` with release notes on [GitHub Releases](https://github.com/timescale/storybook-addon-md/releases).
+
 ## 0.9.0
 
 ### Minor Changes

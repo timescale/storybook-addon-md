@@ -1,5 +1,5 @@
 import type { StorybookConfig } from '@storybook/react-vite';
-import type { MarkdownOptions } from 'storybook-addon-md';
+import type { MarkdownOptions } from '@tigerdata/storybook-addon-md';
 import base, { markdownOptions } from '../.storybook/main';
 
 const config: StorybookConfig = {
@@ -10,7 +10,7 @@ const config: StorybookConfig = {
     '@storybook/addon-docs',
     '@storybook/addon-mcp',
     {
-      name: 'storybook-addon-md',
+      name: '@tigerdata/storybook-addon-md',
       options: { ...markdownOptions, manifests: true } satisfies MarkdownOptions,
     },
   ],

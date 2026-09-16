@@ -1,7 +1,7 @@
 # Storybook Markdown
 
-[![npm version](https://img.shields.io/npm/v/storybook-addon-md)](https://www.npmjs.com/package/storybook-addon-md)
-[![CI](https://github.com/ruijdacd/storybook-addon-md/actions/workflows/ci.yml/badge.svg)](https://github.com/ruijdacd/storybook-addon-md/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@tigerdata/storybook-addon-md)](https://www.npmjs.com/package/@tigerdata/storybook-addon-md)
+[![CI](https://github.com/timescale/storybook-addon-md/actions/workflows/ci.yml/badge.svg)](https://github.com/timescale/storybook-addon-md/actions/workflows/ci.yml)
 
 Write ordinary `.md` files and browse them inside Storybook. Attach documentation to component stories or create standalone pages, with no JSX, imports, or MDX wrappers to maintain.
 
@@ -17,7 +17,7 @@ Write ordinary `.md` files and browse them inside Storybook. Attach documentatio
 We recommend [ni](https://github.com/antfu-collective/ni#readme) to install dependencies with your project's package manager. Install it first with `npm install -g @antfu/ni`, then run:
 
 ```sh
-ni -D storybook-addon-md @storybook/addon-docs@10.6.0
+ni -D @tigerdata/storybook-addon-md @storybook/addon-docs@10.6.0
 ```
 
 Tested with **Storybook 10.6.0**, **React Vite 10.6.0**, **Vite 7.3.6**, and **React 19.2.4**. Requires Node 22.13+. Other builders and renderers are not tested.
@@ -33,7 +33,7 @@ const config: StorybookConfig = {
   addons: [
     '@storybook/addon-docs',
     {
-      name: 'storybook-addon-md',
+      name: '@tigerdata/storybook-addon-md',
       options: {
         patterns: ['src/**/*.md', 'docs/**/*.md', '!docs/private/**'],
       },
@@ -175,7 +175,7 @@ const config: StorybookConfig = {
   addons: [
     '@storybook/addon-docs',
     {
-      name: 'storybook-addon-md',
+      name: '@tigerdata/storybook-addon-md',
       options: {
         patterns: ['src/**/*.md', 'docs/**/*.md'],
         tagFields: ['category', 'subcategory'],
@@ -193,7 +193,7 @@ By default every relative link is bundled as an asset, so a link to another Mark
 
 ```ts
 {
-  name: 'storybook-addon-md',
+  name: '@tigerdata/storybook-addon-md',
   options: {
     patterns: ['src/**/*.md', 'docs/**/*.md'],
     links: {
@@ -215,10 +215,14 @@ Fragments and query strings are preserved. Attached documents link to their stor
 
 ### Node parsing and CI checks
 
-Use the Node-only `storybook-addon-md/node` export. It shares discovery's parser and story resolution without loading Storybook or browser code:
+Use the Node-only `@tigerdata/storybook-addon-md/node` export. It shares discovery's parser and story resolution without loading Storybook or browser code:
 
 ```ts
-import { readMarkdown, parseMarkdown, resolveStoryAssociations } from 'storybook-addon-md/node';
+import {
+  readMarkdown,
+  parseMarkdown,
+  resolveStoryAssociations,
+} from '@tigerdata/storybook-addon-md/node';
 
 const root = process.cwd();
 const document = await readMarkdown('src/Button.metadata.md', root);
@@ -250,7 +254,7 @@ const config: StorybookConfig = {
     '@storybook/addon-docs',
     '@storybook/addon-mcp',
     {
-      name: 'storybook-addon-md',
+      name: '@tigerdata/storybook-addon-md',
       options: {
         patterns: ['src/**/*.md', 'docs/**/*.md'],
         manifests: true,
@@ -262,7 +266,7 @@ const config: StorybookConfig = {
 
 Use MCP's `docs-list` to find IDs, then `docs-show` with a component ID (for attached guidance) or standalone documentation ID.
 
-For MCP access, install `@storybook/addon-mcp@10.6.0` and connect your MCP client to `http://localhost:6006/mcp`. Its Get Documentation tool is named `docs-show` in 10.6.0. Omit that addon if you only need JSON manifests. It is not a dependency of `storybook-addon-md`.
+For MCP access, install `@storybook/addon-mcp@10.6.0` and connect your MCP client to `http://localhost:6006/mcp`. Its Get Documentation tool is named `docs-show` in 10.6.0. Omit that addon if you only need JSON manifests. It is not a dependency of `@tigerdata/storybook-addon-md`.
 
 With Storybook and React Vite **10.6.0**, standalone Markdown appears in `/manifests/docs.json`, and attached Markdown appears in the component's `docs` in `/manifests/components.json`. Both development and static builds include the complete original source, including frontmatter. Development updates use the existing file watcher. Shared documents appear under each associated component; multiple documents on one page are joined in discovery order with two newlines. String `description` values supply optional summaries.
 
@@ -284,33 +288,33 @@ Set `stylesheet: '.storybook/markdown.css'` to override the defaults:
 
 Shared tokens cover accent, border, radius, and spacing. Element variables cover the page layout, typography, links, quotes, callouts, code, tables, images, and chips. Defaults follow Storybook’s Docs theme in light and dark mode.
 
-See [Styling](STYLING.md) for all variables, status and callout colors, theme switching, and custom layouts or Markdown renderers. The [example stylesheet](https://github.com/ruijdacd/storybook-addon-md/blob/main/example/.storybook/markdown.css) provides a complete GitHub-inspired theme.
+See [Styling](STYLING.md) for all variables, status and callout colors, theme switching, and custom layouts or Markdown renderers. The [example stylesheet](https://github.com/timescale/storybook-addon-md/blob/main/example/.storybook/markdown.css) provides a complete GitHub-inspired theme.
 
 ## Links and limitations
 
 - Relative links and images resolve from the Markdown source and are included in static builds. Root-relative assets use Storybook’s `staticDirs`.
 - Without the `links` option, links to `.md` files open the original source, not a rendered Docs page. Set `links` or use a Storybook URL such as `?path=/docs/guides-introduction--docs` for page navigation.
 - Braces and JSX-like text are treated as content. Raw HTML renders as text by default.
-- Set Storybook’s `parameters.options.storySort` for explicit sidebar ordering. See the [example preview](https://github.com/ruijdacd/storybook-addon-md/blob/main/example/.storybook/preview.ts).
+- Set Storybook’s `parameters.options.storySort` for explicit sidebar ordering. See the [example preview](https://github.com/timescale/storybook-addon-md/blob/main/example/.storybook/preview.ts).
 - Multiple development Storybooks sharing one config directory are unsupported.
 
 ## Examples and contributing
 
-Install dependencies with **Nub 0.7.5** and **Node 24.11+**:
+Install dependencies with **Node 24.11+** and the repository's `./bun` wrapper, which downloads the pinned Bun version on first use:
 
 ```sh
-nub install
+./bun install
 ```
 
 Choose either example. They share stories, Markdown, and styling, with separate Storybook configurations. The MCP example sets `docs.defaultName: 'Reference'` to exercise custom docs names:
 
-| Example     | Configuration                         | Run                            | Build                         |
-| ----------- | ------------------------------------- | ------------------------------ | ----------------------------- |
-| Without MCP | [Default](example/.storybook/main.ts) | `nub run storybook` (6006)     | `nub run build-storybook`     |
-| With MCP    | [MCP](example/.storybook-mcp/main.ts) | `nub run storybook:mcp` (6007) | `nub run build-storybook:mcp` |
+| Example     | Configuration                         | Run                              | Build                           |
+| ----------- | ------------------------------------- | -------------------------------- | ------------------------------- |
+| Without MCP | [Default](example/.storybook/main.ts) | `./bun run storybook` (6006)     | `./bun run build-storybook`     |
+| With MCP    | [MCP](example/.storybook-mcp/main.ts) | `./bun run storybook:mcp` (6007) | `./bun run build-storybook:mcp` |
 
 The MCP example enables `manifests: true` and `@storybook/addon-mcp`. Connect your MCP client to `http://localhost:6007/mcp`. Static builds write to `storybook-static/` and `storybook-static-mcp/`, respectively. MCP is a development dependency for the example only; normal addon usage does not require it.
 
 Browse **Guides → Introduction**, **Guides → Callouts**, **Components → Button**, and **Components → Toggle** for standalone, attached, and shared docs with system light/dark styling.
 
-See [Contributing](CONTRIBUTING.md) for tests and releases, or [open an issue](https://github.com/ruijdacd/storybook-addon-md/issues).
+See [Contributing](CONTRIBUTING.md) for tests and releases, or [open an issue](https://github.com/timescale/storybook-addon-md/issues).

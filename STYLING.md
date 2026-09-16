@@ -192,8 +192,8 @@ For live system-preference switching, follow the example’s [Docs container] an
 Set `presentation: '.storybook/markdown-presentation.tsx'` and export either or both components:
 
 ```tsx
-import { DefaultLayout, DefaultMarkdownRenderer } from 'storybook-addon-md/runtime';
-import type { LayoutProps, MarkdownDocument } from 'storybook-addon-md/runtime';
+import { DefaultLayout, DefaultMarkdownRenderer } from '@tigerdata/storybook-addon-md/runtime';
+import type { LayoutProps, MarkdownDocument } from '@tigerdata/storybook-addon-md/runtime';
 
 export function Layout(props: LayoutProps) {
   return <DefaultLayout {...props} />;
@@ -210,8 +210,8 @@ export function MarkdownRenderer(document: MarkdownDocument) {
 
 ```tsx
 import { Markdown } from '@storybook/addon-docs/blocks';
-import { Anchor } from 'storybook-addon-md/runtime';
-import type { MarkdownDocument } from 'storybook-addon-md/runtime';
+import { Anchor } from '@tigerdata/storybook-addon-md/runtime';
+import type { MarkdownDocument } from '@tigerdata/storybook-addon-md/runtime';
 
 export function MarkdownRenderer({ markdown }: MarkdownDocument) {
   return <Markdown options={{ overrides: { a: Anchor } }}>{markdown}</Markdown>;
@@ -224,5 +224,5 @@ Callouts are rendered by `DefaultMarkdownRenderer`. A custom `MarkdownRenderer` 
 
 Customization paths are relative to the project folder and must stay inside it. Missing files produce source-specific errors. Styling and presentation are independent options.
 
-[Docs container]: https://github.com/ruijdacd/storybook-addon-md/blob/main/example/.storybook/SystemDocsContainer.tsx
-[manager configuration]: https://github.com/ruijdacd/storybook-addon-md/blob/main/example/.storybook/manager.ts
+[Docs container]: https://github.com/timescale/storybook-addon-md/blob/main/example/.storybook/SystemDocsContainer.tsx
+[manager configuration]: https://github.com/timescale/storybook-addon-md/blob/main/example/.storybook/manager.ts

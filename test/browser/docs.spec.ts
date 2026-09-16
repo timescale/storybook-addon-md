@@ -60,7 +60,7 @@ for (const [mode, port] of [
     );
     await expect(page.getByRole('link', { name: 'Button source' })).toHaveAttribute(
       'href',
-      'https://github.com/ruijdacd/storybook-addon-md/blob/main/example/components/Button.tsx',
+      'https://github.com/timescale/storybook-addon-md/blob/main/example/components/Button.tsx',
     );
 
     const overrides = await page.addStyleTag({

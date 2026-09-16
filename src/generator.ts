@@ -93,9 +93,9 @@ export async function generate(options: ContentOptions) {
   for (const [key, group] of groups) {
     const imports = [
       "import { Meta } from '@storybook/addon-docs/blocks';",
-      "import { Documentation } from 'storybook-addon-md/runtime';",
+      "import { Documentation } from '@tigerdata/storybook-addon-md/runtime';",
       "import './status.js';",
-      "import 'storybook-addon-md/styles.css';",
+      "import '@tigerdata/storybook-addon-md/styles.css';",
       ...group.documents.map((name, index) => `import document${index} from './${name}';`),
     ];
 

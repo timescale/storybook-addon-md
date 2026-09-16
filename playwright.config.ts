@@ -38,7 +38,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        'nub run build && node node_modules/storybook/dist/bin/dispatcher.js dev -c example/.storybook --ci --no-open --disable-telemetry --exact-port -p 16006',
+        './bun run build && node node_modules/storybook/dist/bin/dispatcher.js dev -c example/.storybook --ci --no-open --disable-telemetry --exact-port -p 16006',
       url: 'http://localhost:16006/index.json',
       reuseExistingServer: !process.env.CI,
       timeout: 120000,

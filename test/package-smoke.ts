@@ -12,19 +12,20 @@ const project = await mkdtemp(path.join(os.tmpdir(), 'storybook-md-consumer-'));
 let server: ChildProcess | undefined;
 let browser: Browser | undefined;
 let output = '';
+const bun = path.resolve('bun');
 const run = async (args: string[], cwd: string) => {
-  const label = `Consumer: nub ${args.join(' ')}`;
+  const label = `Consumer: bun ${args.join(' ')}`;
   console.time(label);
   try {
-    return await exec('nub', args, { cwd, maxBuffer: 5 * 1024 * 1024 });
+    return await exec(bun, args, { cwd, maxBuffer: 5 * 1024 * 1024 });
   } finally {
     console.timeEnd(label);
   }
 };
 
 try {
-  const { stdout } = await run(['pack', '--json', '--pack-destination', project], process.cwd());
-  const [{ filename }] = JSON.parse(stdout);
+  await run(['pm', 'pack', '--quiet', '--destination', project], process.cwd());
+  const [filename] = (await readdir(project)).filter((name) => name.endsWith('.tgz'));
 
   await cp('example', project, {
     recursive: true,
@@ -36,9 +37,8 @@ try {
       name: 'markdown-addon-consumer',
       private: true,
       type: 'module',
-      packageManager: 'nub@0.7.5',
       devDependencies: {
-        'storybook-addon-md': `file:${filename}`,
+        '@tigerdata/storybook-addon-md': `file:${filename}`,
         '@storybook/addon-docs': '10.6.0',
         '@storybook/addon-mcp': '10.6.0',
         '@storybook/react-vite': '10.6.0',
@@ -77,11 +77,9 @@ try {
     '> [!NOTE]\n> ![Asset check](./assets/button.svg)\n',
   );
 
-  await cp('.npmrc', path.join(project, '.npmrc'));
-  await cp('nub.jsonc', path.join(project, 'nub.jsonc'));
   const mainFile = path.join(project, '.storybook/main.ts');
 
-  await run(['install', '--no-frozen-lockfile'], project);
+  await run(['install'], project);
   await exec(
     process.execPath,
     [
@@ -90,7 +88,7 @@ try {
       `
     import assert from 'node:assert/strict';
     import { readFile } from 'node:fs/promises';
-    import { parseMarkdown, readMarkdown, resolveStoryAssociations } from 'storybook-addon-md/node';
+    import { parseMarkdown, readMarkdown, resolveStoryAssociations } from '@tigerdata/storybook-addon-md/node';
     const document = await readMarkdown('components/Button.metadata.md', process.cwd());
     assert.equal(document.original, await readFile(document.file, 'utf8'));
     assert.equal(document.metadata.status, 'Stable');
@@ -102,10 +100,7 @@ try {
     ],
     { cwd: project },
   );
-  await run(
-    ['exec', '--', 'storybook', 'build', '-c', '.storybook-mcp', '--disable-telemetry'],
-    project,
-  );
+  await run(['x', 'storybook', 'build', '-c', '.storybook-mcp', '--disable-telemetry'], project);
 
   const { entries } = JSON.parse(
     await readFile(path.join(project, 'storybook-static/index.json'), 'utf8'),
@@ -143,10 +138,7 @@ try {
   await rm(path.join(project, 'docs/assets/button.svg'));
 
   await assert.rejects(
-    run(
-      ['exec', '--', 'storybook', 'build', '-c', '.storybook-mcp', '--disable-telemetry'],
-      project,
-    ),
+    run(['x', 'storybook', 'build', '-c', '.storybook-mcp', '--disable-telemetry'], project),
     (error) => {
       assert(error instanceof Error);
       assert.match(
