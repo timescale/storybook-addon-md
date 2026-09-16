@@ -53,11 +53,11 @@ The script:
 
 The tag push triggers the Publish workflow (`.github/workflows/publish.yml`), which installs with Bun and runs `npm publish`. The `prepack` script builds `dist/` first. Create the GitHub Release from the tag afterward for release notes.
 
-You need permission to push directly to `main`. A repository rule requiring pull requests blocks the commit push but not the tag push, which leaves the tag published while `main` still has the old version. If that happens, push the local release commit to `main` with admin bypass so the tag's commit is on `main`.
+Releasing requires the repository admin role. The `main` and `v*` tag rulesets block direct pushes and tag creation for everyone else, and admins bypass them, so only admins can trigger a publish.
 
 Publishing authenticates with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers). The `@tigerdata/storybook-addon-md` package on npm has a GitHub Actions trusted publisher for `timescale/storybook-addon-md`, workflow `publish.yml`, with no environment. No `NPM_TOKEN` secret is needed. A brand-new package name must be published once by hand before a trusted publisher can be attached to it.
 
-Follow [e18e's publishing guidance](https://e18e.dev/docs/publishing.html) when maintaining repository settings. Keep private vulnerability reporting and approval for first-time contributors enabled, and require the `verify` status check on `main`. Dependabot keeps workflow action SHA pins up to date.
+Follow [e18e's publishing guidance](https://e18e.dev/docs/publishing.html) when maintaining repository settings. Keep private vulnerability reporting and approval for first-time contributors enabled, and require the `verify` status check on `main`. The `main` ruleset requires a squash-merged pull request with one approval, and the `release tags` ruleset restricts `v*` tags to admins. Dependabot keeps workflow action SHA pins up to date.
 
 ## Deploy the example
 
