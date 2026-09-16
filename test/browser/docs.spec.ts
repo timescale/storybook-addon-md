@@ -298,7 +298,8 @@ for (const [mode, port, suffix] of [
       'href',
       `http://localhost:${port}/?path=/docs/components-button--${suffix}`,
     );
-    await expect(link).toHaveAttribute('target', '_top');
+    await expect(link).toHaveAttribute('data-link', 'docs');
+    await expect(link).not.toHaveAttribute('target');
     await link.click();
 
     await expect(page).toHaveURL(new RegExp(`path=/docs/components-button--${suffix}`));
