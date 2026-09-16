@@ -54,13 +54,14 @@ for (const [mode, port] of [
       page.getByRole('heading', { name: 'Ordinary Markdown, inside Storybook' }),
     ).toHaveCSS('border-bottom-style', 'solid');
 
-    const sourceUrl = await page
-      .getByRole('link', { name: 'shared guidance source' })
-      .evaluate((element: HTMLAnchorElement) => element.href);
-    const response = await request.get(sourceUrl);
-
-    expect(response.ok()).toBeTruthy();
-    expect(await response.text()).toContain('Shared interaction guidance');
+    await expect(page.getByRole('link', { name: 'shared guidance' })).toHaveAttribute(
+      'href',
+      `http://localhost:${port}/?path=/docs/components-button--docs`,
+    );
+    await expect(page.getByRole('link', { name: 'Button source' })).toHaveAttribute(
+      'href',
+      'https://github.com/ruijdacd/storybook-addon-md/blob/main/example/components/Button.tsx',
+    );
 
     const overrides = await page.addStyleTag({
       content: `.sbdocs-wrapper .storybook-addon-md-page {
@@ -114,15 +115,9 @@ for (const [mode, port] of [
       'window.confirm',
     );
 
-    const calloutLink = page.locator('[data-callout="tip"]').getByRole('link', {
-      name: 'introduction',
-    });
-    const calloutSource = await request.get(
-      await calloutLink.evaluate((element: HTMLAnchorElement) => element.href),
-    );
-
-    expect(calloutSource.ok()).toBeTruthy();
-    expect(await calloutSource.text()).toContain('Ordinary Markdown, inside Storybook');
+    await expect(
+      page.locator('[data-callout="tip"]').getByRole('link', { name: 'introduction' }),
+    ).toHaveAttribute('href', `http://localhost:${port}/?path=/docs/guides-introduction--docs`);
 
     const accents = await calloutElements.evaluateAll((elements) =>
       elements.map((element) => ({
@@ -282,6 +277,36 @@ for (const [mode, port] of [
     );
     expect(await page.evaluate(() => performance.timeOrigin)).toBe(managerOrigin);
     expect(await wrapper.evaluate(() => performance.timeOrigin)).toBe(docsOrigin);
+  });
+}
+
+for (const [mode, port, suffix] of [
+  ['development', 16006, 'docs'],
+  ['static', 16007, 'docs'],
+  ['development custom name', 16009, 'reference'],
+  ['static custom name', 16010, 'reference'],
+] as const) {
+  test(`${mode}: document links open the linked Docs page in the manager`, async ({ page }) => {
+    await page.goto(`http://localhost:${port}/?path=/docs/guides-introduction--${suffix}`, {
+      waitUntil: 'domcontentloaded',
+    });
+
+    const preview = page.frameLocator('#storybook-preview-iframe');
+    const link = preview.getByRole('link', { name: 'shared guidance' });
+
+    await expect(link).toHaveAttribute(
+      'href',
+      `http://localhost:${port}/?path=/docs/components-button--${suffix}`,
+    );
+    await expect(link).toHaveAttribute('data-link', 'docs');
+    await expect(link).not.toHaveAttribute('target');
+    await link.click();
+
+    await expect(page).toHaveURL(new RegExp(`path=/docs/components-button--${suffix}`));
+    await expect(preview.getByRole('heading', { name: /Overview$/ })).toBeVisible();
+    await expect(page.locator('.sidebar-container [data-selected="true"]')).toContainText(
+      /Docs|Reference/,
+    );
   });
 }
 

@@ -1,5 +1,7 @@
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import type { ComponentProps, CSSProperties, MouseEvent, ReactNode } from 'react';
 import { Children, cloneElement, isValidElement } from 'react';
+import { NAVIGATE_URL } from 'storybook/internal/core-events';
+import { addons } from 'storybook/preview-api';
 import type { StorybookTheme } from 'storybook/theming';
 import { useTheme } from 'storybook/theming';
 import type { MarkdownDocument, LayoutProps, Presentation } from './types.js';
@@ -55,12 +57,60 @@ function Blockquote({ children, ...props }: ComponentProps<'blockquote'>) {
   );
 }
 
+export function Anchor({ href, target, rel, ...props }: ComponentProps<'a'>) {
+  if (href?.startsWith('?path=')) {
+    const navigate = (event: MouseEvent<HTMLAnchorElement>) => {
+      props.onClick?.(event);
+
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey ||
+        (target && target !== '_self')
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      addons.getChannel().emit(NAVIGATE_URL, href);
+    };
+
+    return (
+      <a
+        {...props}
+        href={new URL(href, new URL('./', window.location.href)).href}
+        target={target}
+        rel={rel}
+        data-link="docs"
+        onClick={navigate}
+      />
+    );
+  }
+
+  if (href && /^https?:\/\//i.test(href)) {
+    return (
+      <a
+        {...props}
+        href={href}
+        target={target ?? '_blank'}
+        rel={rel ?? 'noopener noreferrer'}
+        data-link="external"
+      />
+    );
+  }
+
+  return <a {...props} href={href} target={target} rel={rel} />;
+}
+
 export function DefaultMarkdownRenderer({ markdown }: MarkdownDocument) {
   return (
     <Markdown
       options={{
         disableParsingRawHTML: true,
-        overrides: { code: CodeOrSourceMdx, ...HeadersMdx, a: 'a', blockquote: Blockquote },
+        overrides: { code: CodeOrSourceMdx, ...HeadersMdx, a: Anchor, blockquote: Blockquote },
       }}
     >
       {markdown}

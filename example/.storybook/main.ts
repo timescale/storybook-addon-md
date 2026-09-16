@@ -6,6 +6,7 @@ export const markdownOptions = {
   patterns: ['docs/**/*.md', 'components/**/*.md', '!docs/drafts/**'],
   generatedDir: 'example-markdown-generated',
   stylesheet: '.storybook/markdown.css',
+  links: { repository: 'https://github.com/ruijdacd/storybook-addon-md/blob/main/example' },
 } satisfies MarkdownOptions;
 
 const config: StorybookConfig = {

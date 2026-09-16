@@ -159,6 +159,7 @@ Invalid frontmatter, missing or ambiguous story references, and missing local as
 | `manifests`    | `false`                        | Include original Markdown in Storybook documentation manifests. |
 | `tagFields`    | `[]`                           | Additional frontmatter fields displayed as tags.                |
 | `presentation` | None                           | Module exporting `Layout` and/or `MarkdownRenderer`.            |
+| `links`        | None                           | Rewrite relative links to Docs pages and repository files.      |
 
 Globs and customization paths start from your project folder (the parent of `.storybook` by default). Keep the config and local files inside that folder. Restart Storybook after changing options.
 
@@ -185,6 +186,32 @@ const config: StorybookConfig = {
 ```
 
 `tagFields` adds string values and string array items from those fields to the existing tags. Missing fields, blank strings, and non-string values are ignored. Labels are deduplicated by exact value across documents, tags, configured fields, and status; status takes precedence and retains its original `data-status`. Metadata is not modified. Consumers can remove adapters that only copied these fields into `tags`.
+
+### Relative links
+
+By default every relative link is bundled as an asset, so a link to another Markdown file opens its raw source. Set `links` to rewrite relative links instead:
+
+```ts
+{
+  name: 'storybook-addon-md',
+  options: {
+    patterns: ['src/**/*.md', 'docs/**/*.md'],
+    links: {
+      documents: true,
+      repository: 'https://github.com/acme/design-system/blob/main',
+    },
+  },
+}
+```
+
+| Field        | Default | Behavior                                                                                                       |
+| ------------ | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `documents`  | `true`  | Links to discovered Markdown documents become ordinary links to their Docs page in the manager.                |
+| `repository` | None    | Links to other files or folders inside the project folder become `<repository>/<path relative to root>` links. |
+
+Rendered links behave correctly without a click handler in your Layout. Docs links keep the absolute manager URL as `href`, so copying, middle-clicking, and opening in a new tab work as usual, and a plain left click asks the manager to navigate without reloading the preview. Modified clicks fall through to the browser. Absolute `http:` and `https:` links, including every `repository` link, open in a new tab with `rel="noopener noreferrer"`. Fragment links are left untouched, and explicit `target` or `rel` attributes from a custom renderer are never overridden.
+
+Fragments and query strings are preserved. Attached documents link to their story file's Docs page using the CSF `title`; when the story file has no explicit title, the link falls back to the `story:<path>` key and will not resolve until a title is set. Images and image reference definitions remain bundled assets, and manifests keep the original Markdown. Relative links to files outside root, or to missing files, still fail the build. Without `links`, behavior is unchanged.
 
 ### Node parsing and CI checks
 
@@ -255,14 +282,14 @@ Set `stylesheet: '.storybook/markdown.css'` to override the defaults:
 }
 ```
 
-Variables cover typography, spacing, borders, links, code, tables, chips, and callouts. Defaults follow Storybook’s Docs theme in light and dark mode.
+Shared tokens cover accent, border, radius, and spacing. Element variables cover the page layout, typography, links, quotes, callouts, code, tables, images, and chips. Defaults follow Storybook’s Docs theme in light and dark mode.
 
 See [Styling](STYLING.md) for all variables, status and callout colors, theme switching, and custom layouts or Markdown renderers. The [example stylesheet](https://github.com/ruijdacd/storybook-addon-md/blob/main/example/.storybook/markdown.css) provides a complete GitHub-inspired theme.
 
 ## Links and limitations
 
 - Relative links and images resolve from the Markdown source and are included in static builds. Root-relative assets use Storybook’s `staticDirs`.
-- Links to `.md` files open the original source, not a rendered Docs page. Use a Storybook URL such as `/?path=/docs/guides-introduction--docs` for page navigation.
+- Without the `links` option, links to `.md` files open the original source, not a rendered Docs page. Set `links` or use a Storybook URL such as `?path=/docs/guides-introduction--docs` for page navigation.
 - Braces and JSX-like text are treated as content. Raw HTML renders as text by default.
 - Set Storybook’s `parameters.options.storySort` for explicit sidebar ordering. See the [example preview](https://github.com/ruijdacd/storybook-addon-md/blob/main/example/.storybook/preview.ts).
 - Multiple development Storybooks sharing one config directory are unsupported.

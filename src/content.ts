@@ -1,5 +1,5 @@
-import type { Link, Image, Definition } from 'mdast';
-import type { MarkdownOptions } from './index.js';
+import type { Link, Image, Definition, Root } from 'mdast';
+import type { LinkOptions, MarkdownOptions } from './index.js';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { glob } from 'tinyglobby';
@@ -31,7 +31,15 @@ export const slash = (value: string) => value.split(path.sep).join('/');
 export const fail = (source: string, message: string) =>
   new Error(`[storybook-addon-md] ${source}: ${message}`);
 
-export async function localFile(file: string, root: string, source: string, kind: string) {
+export type LinkResolver = (target: string, source: string) => Promise<string | undefined>;
+
+export async function localFile(
+  file: string,
+  root: string,
+  source: string,
+  kind: string,
+  directories = false,
+) {
   try {
     const actual = await realpath(file);
     const relative = path.relative(await realpath(root), actual);
@@ -40,7 +48,9 @@ export async function localFile(file: string, root: string, source: string, kind
       throw fail(source, `${kind} must be inside root: ${file}`);
     }
 
-    if (!(await stat(actual)).isFile()) throw new Error('not a file');
+    const info = await stat(actual);
+
+    if (!info.isFile() && !(directories && info.isDirectory())) throw new Error('not a file');
 
     return file;
   } catch (error) {
@@ -177,7 +187,23 @@ export async function resolveStoryAssociations(file: string, metadata: Frontmatt
   return [await localFile(matches[0], root, file, 'story reference')];
 }
 
-export async function resolveAssets(body: string, file: string, root: string, standalone = false) {
+const imageDefinitions = (tree: Root) => {
+  const identifiers = new Set<string>();
+
+  visit(tree, 'imageReference', (node) => {
+    identifiers.add(node.identifier);
+  });
+
+  return identifiers;
+};
+
+export async function resolveAssets(
+  body: string,
+  file: string,
+  root: string,
+  standalone = false,
+  resolveLink?: LinkResolver,
+) {
   const tree = markdown.parse(body);
   const nodes: (Link | Image | Definition)[] = [];
 
@@ -186,6 +212,7 @@ export async function resolveAssets(body: string, file: string, root: string, st
       nodes.push(node);
   });
 
+  const images = imageDefinitions(tree);
   const assets: { file: string; suffix: string; token: string }[] = [];
 
   for (const node of nodes) {
@@ -202,12 +229,17 @@ export async function resolveAssets(body: string, file: string, root: string, st
       throw fail(file, `invalid local URL: ${url}`);
     }
 
-    const asset = await localFile(
-      path.resolve(path.dirname(file), decoded),
-      root,
-      file,
-      'local asset',
-    );
+    const target = path.resolve(path.dirname(file), decoded);
+    const image =
+      node.type === 'image' || (node.type === 'definition' && images.has(node.identifier));
+    const link = image || !resolveLink ? undefined : await resolveLink(target, file);
+
+    if (link) {
+      node.url = `${link}${suffix}`;
+      continue;
+    }
+
+    const asset = await localFile(target, root, file, 'local asset');
     const token = `SBMDASSET${assets.length}END`;
 
     if (body.includes(token)) throw fail(file, `reserved asset token in content: ${token}`);
@@ -230,7 +262,7 @@ export async function resolveAssets(body: string, file: string, root: string, st
   return { markdown: markdown.stringify(tree), assets, heading };
 }
 
-export async function discover({ root, patterns, output }: ContentOptions) {
+export async function discover({ root, patterns, output, links, docsName }: ContentOptions) {
   if (
     !Array.isArray(patterns) ||
     !patterns.length ||
@@ -261,13 +293,12 @@ export async function discover({ root, patterns, output }: ContentOptions) {
     ],
   });
 
-  return Promise.all(
+  const documents = await Promise.all(
     files
       .sort()
       .filter((file) => file.endsWith('.md'))
       .map(async (file) => {
         const { original, body, metadata, stories } = await readMarkdown(file, root);
-        const content = await resolveAssets(body, file, root, !stories.length);
 
         return {
           file,
@@ -279,10 +310,80 @@ export async function discover({ root, patterns, output }: ContentOptions) {
             `Documentation/${slash(path.relative(root, file)).replace(/\.md$/, '')}`,
           metadata,
           stories,
-          ...content,
         };
       }),
   );
+  const resolveLink = links ? await linkResolver(links, documents, root, docsName) : undefined;
+
+  return Promise.all(
+    documents.map(async (document) => ({
+      ...document,
+      ...(await resolveAssets(
+        document.body,
+        document.file,
+        root,
+        !document.stories.length,
+        resolveLink,
+      )),
+    })),
+  );
+}
+
+async function docsId(
+  document: { source: string; title: string; stories: string[] },
+  root: string,
+  docsName: string,
+  titles: Map<string, Promise<{ id?: string; title?: string } | undefined>>,
+) {
+  const { toId } = await import('storybook/internal/csf');
+
+  if (!document.stories.length) return toId(document.title, docsName);
+
+  const [story] = document.stories;
+
+  if (!titles.has(story)) {
+    titles.set(
+      story,
+      import('storybook/internal/csf-tools')
+        .then(({ readCsf }) => readCsf(story, { makeTitle: (title) => title }))
+        .then((csf) => csf.parse().meta)
+        .catch(() => undefined),
+    );
+  }
+
+  const meta = await titles.get(story);
+
+  return meta?.title
+    ? toId(meta.id ?? meta.title, docsName)
+    : `story:${slash(path.relative(root, story))}`;
+}
+
+async function linkResolver(
+  links: LinkOptions,
+  documents: { file: string; source: string; title: string; stories: string[] }[],
+  root: string,
+  docsName = 'Docs',
+): Promise<LinkResolver> {
+  const paths = new Map<string, string>();
+  const titles: Parameters<typeof docsId>[3] = new Map();
+
+  if (links.documents !== false) {
+    for (const document of documents) {
+      paths.set(document.file, `?path=/docs/${await docsId(document, root, docsName, titles)}`);
+    }
+  }
+
+  const repository = links.repository?.replace(/\/+$/, '');
+
+  return async (target, source) => {
+    const page = paths.get(target);
+
+    if (page || !repository) return page;
+
+    await localFile(target, root, source, 'link target', true);
+
+    return `${repository}/${slash(path.relative(root, target))}`;
+  };
 }
 
 export async function readMarkdown(file: string, root: string) {

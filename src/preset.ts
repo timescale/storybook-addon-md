@@ -37,6 +37,24 @@ function settings(options: PresetOptions) {
     throw fail(configDir, 'tagFields must be an array of lowercase frontmatter field names');
   }
 
+  const { links } = options;
+
+  if (
+    links !== undefined &&
+    (typeof links !== 'object' ||
+      links === null ||
+      Array.isArray(links) ||
+      Object.keys(links).some((key) => !['documents', 'repository'].includes(key)) ||
+      (links.documents !== undefined && typeof links.documents !== 'boolean') ||
+      (links.repository !== undefined &&
+        (typeof links.repository !== 'string' || !/^https?:\/\/\S+$/.test(links.repository))))
+  ) {
+    throw fail(
+      configDir,
+      'links must be an object with an optional documents boolean and an optional repository URL',
+    );
+  }
+
   if ('exclude' in options) {
     throw fail(
       configDir,
@@ -65,6 +83,9 @@ function settings(options: PresetOptions) {
     tagFields: options.tagFields,
     stylesheet: options.stylesheet ? path.resolve(root, options.stylesheet) : undefined,
     presentation: options.presentation ? path.resolve(root, options.presentation) : undefined,
+    links: links
+      ? { documents: links.documents ?? true, repository: links.repository?.replace(/\/+$/, '') }
+      : undefined,
   };
 }
 

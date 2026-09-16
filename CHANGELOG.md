@@ -1,5 +1,60 @@
 # storybook-addon-md
 
+## 0.9.0
+
+### Minor Changes
+
+- 990c4b9: Rendered links now behave correctly on their own. Docs links keep the absolute manager URL and navigate through the Storybook channel on a plain click, so the preview no longer reloads; modified clicks and non-primary buttons fall through to the browser. External links open in a new tab with `rel="noopener noreferrer"`, both kinds carry a `data-link` attribute, and explicit `target` or `rel` attributes are preserved. `Anchor` is exported from `storybook-addon-md/runtime` for custom renderers.
+
+  Docs links no longer set `target="_top"`. Stylesheets or tests that relied on that attribute should target `[data-link="docs"]` instead.
+
+## 0.8.0
+
+### Minor Changes
+
+- 298284c: Add an opt-in `links` option that rewrites relative Markdown links instead of bundling their targets as assets.
+
+  - `links.documents` (default `true` when `links` is set) turns links to other discovered documents into ordinary links to their Docs page in the Storybook manager.
+  - `links.repository` turns links to other files or folders inside root into `<repository>/<relative path>` links, so source files are no longer copied into the bundle and folder links no longer fail discovery.
+
+  Images, image reference definitions, manifests, and the default behavior without `links` are unchanged.
+
+## 0.7.0
+
+### Minor Changes
+
+- 91cc4a7: Add back focused styling hooks for the page, links, quotes, callouts, tables, and images, built on two new shared tokens.
+
+  **New shared tokens**
+
+  - `--sbmd-accent-color` colors links and task-list checkboxes. `--sbmd-link-color` now defaults to it.
+  - `--sbmd-radius` rounds quotes, callouts, images, and code. It is unset by default, so code keeps its `0.1875rem` radius and other elements stay square until you set it.
+
+  **New element variables**
+
+  | Area     | Variables                                                                                                                        |
+  | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
+  | Page     | `--sbmd-page-max-width`, `--sbmd-page-margin`, `--sbmd-page-padding`, `--sbmd-page-background`                                   |
+  | Links    | `--sbmd-link-hover-decoration`, `--sbmd-link-underline-offset`. `--sbmd-link-decoration` accepts shorthands like `underline 1px` |
+  | Quotes   | `--sbmd-quote-background`                                                                                                        |
+  | Callouts | `--sbmd-callout-accent`, `--sbmd-callout-border`, `--sbmd-callout-background`                                                    |
+  | Tables   | `--sbmd-table-border`, `--sbmd-table-heading-background`                                                                         |
+  | Images   | `--sbmd-image-border`                                                                                                            |
+
+  **Callout accents**
+
+  Each callout now exposes its resolved color as `--sbmd-callout-accent`. Reference it from a `.storybook-addon-md-callout` rule to derive tinted backgrounds or borders for every type at once:
+
+  ```css
+  .storybook-addon-md-callout {
+    --sbmd-callout-background: color-mix(in srgb, var(--sbmd-callout-accent) 8%, transparent);
+  }
+  ```
+
+  **Behavior change**
+
+  `--sbmd-quote-border` no longer applies to callouts. Set `--sbmd-callout-border` instead; its default is `0.25rem solid var(--sbmd-callout-accent)`.
+
 ## 0.6.0
 
 ### Minor Changes

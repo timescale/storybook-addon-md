@@ -1,6 +1,10 @@
 .storybook-addon-md-page {
   font-family: var(--sbmd-font-family, var(--sbmd-native-font-family));
   color: var(--sbmd-color, var(--sbmd-native-color));
+  max-width: var(--sbmd-page-max-width, none);
+  margin: var(--sbmd-page-margin, 0);
+  padding: var(--sbmd-page-padding, 0);
+  background: var(--sbmd-page-background, transparent);
 }
 
 .sbdocs-content .storybook-addon-md :is(p, li, td, th, blockquote) {
@@ -65,9 +69,14 @@
 }
 
 .sbdocs-content .storybook-addon-md a {
-  color: var(--sbmd-link-color, var(--sbmd-native-link-color));
+  color: var(--sbmd-link-color, var(--sbmd-accent-color, var(--sbmd-native-link-color)));
   text-decoration: var(--sbmd-link-decoration, none);
+  text-underline-offset: var(--sbmd-link-underline-offset, auto);
   overflow-wrap: anywhere;
+}
+
+.sbdocs-content .storybook-addon-md a:hover {
+  text-decoration: var(--sbmd-link-hover-decoration, var(--sbmd-link-decoration, none));
 }
 
 .sbdocs-content .storybook-addon-md blockquote {
@@ -77,45 +86,42 @@
     --sbmd-quote-border,
     0.25rem solid var(--sbmd-border-color, var(--sbmd-native-border-color))
   );
+  border-radius: var(--sbmd-radius, 0);
+  background: var(--sbmd-quote-background, transparent);
 }
 
 .sbdocs-content .storybook-addon-md-callout {
   margin: var(--sbmd-block-spacing, 1rem) 0;
   padding: var(--sbmd-callout-padding, 0.5rem 1rem);
-  border-inline-start: var(
-    --sbmd-quote-border,
-    0.25rem solid var(--sbmd-border-color, var(--sbmd-native-border-color))
-  );
-  border-inline-start-color: var(--sbmd-native-callout-color);
+  border-inline-start: var(--sbmd-callout-border, 0.25rem solid var(--sbmd-callout-accent));
+  border-radius: var(--sbmd-radius, 0);
+  background: var(--sbmd-callout-background, transparent);
 }
 
 .sbdocs-content .storybook-addon-md-callout[data-callout='note'] {
-  --sbmd-native-callout-color: var(
-    --sbmd-callout-note-color,
-    var(--sbmd-native-callout-note-color)
-  );
+  --sbmd-callout-accent: var(--sbmd-callout-note-color, var(--sbmd-native-callout-note-color));
 }
 
 .sbdocs-content .storybook-addon-md-callout[data-callout='tip'] {
-  --sbmd-native-callout-color: var(--sbmd-callout-tip-color, var(--sbmd-native-callout-tip-color));
+  --sbmd-callout-accent: var(--sbmd-callout-tip-color, var(--sbmd-native-callout-tip-color));
 }
 
 .sbdocs-content .storybook-addon-md-callout[data-callout='important'] {
-  --sbmd-native-callout-color: var(
+  --sbmd-callout-accent: var(
     --sbmd-callout-important-color,
     var(--sbmd-native-callout-important-color)
   );
 }
 
 .sbdocs-content .storybook-addon-md-callout[data-callout='warning'] {
-  --sbmd-native-callout-color: var(
+  --sbmd-callout-accent: var(
     --sbmd-callout-warning-color,
     var(--sbmd-native-callout-warning-color)
   );
 }
 
 .sbdocs-content .storybook-addon-md-callout[data-callout='caution'] {
-  --sbmd-native-callout-color: var(
+  --sbmd-callout-accent: var(
     --sbmd-callout-caution-color,
     var(--sbmd-native-callout-caution-color)
   );
@@ -123,7 +129,7 @@
 
 .sbdocs-content .storybook-addon-md .storybook-addon-md-callout-label {
   margin: 0 0 0.25rem;
-  color: var(--sbmd-native-callout-color);
+  color: var(--sbmd-callout-accent);
   font-weight: var(--sbmd-callout-label-weight, 600);
 }
 
@@ -143,7 +149,7 @@
 .sbdocs-content .storybook-addon-md :not(pre) > code {
   padding: var(--sbmd-inline-code-padding, 0.1875rem 0.3125rem);
   border: 0.0625rem solid var(--sbmd-border-color, var(--sbmd-native-border-color));
-  border-radius: var(--sbmd-code-radius, 0.1875rem);
+  border-radius: var(--sbmd-code-radius, var(--sbmd-radius, 0.1875rem));
   background: var(--sbmd-inline-code-background, var(--sbmd-native-code-background));
   color: inherit;
   font-size: var(--sbmd-inline-code-size, 0.9em);
@@ -153,7 +159,7 @@
 
 .sbdocs-content .storybook-addon-md pre {
   padding: var(--sbmd-code-padding, 1.25rem);
-  border-radius: var(--sbmd-code-radius, 0.1875rem);
+  border-radius: var(--sbmd-code-radius, var(--sbmd-radius, 0.1875rem));
   overflow-x: auto;
 }
 
@@ -174,8 +180,15 @@
 
 .sbdocs-content .storybook-addon-md :is(th, td) {
   padding: var(--sbmd-table-cell-padding, 0.375rem 0.8125rem);
-  border: 0.0625rem solid var(--sbmd-border-color, var(--sbmd-native-border-color));
+  border: var(
+    --sbmd-table-border,
+    0.0625rem solid var(--sbmd-border-color, var(--sbmd-native-border-color))
+  );
   text-align: start;
+}
+
+.sbdocs-content .storybook-addon-md th {
+  background: var(--sbmd-table-heading-background, transparent);
 }
 
 .sbdocs-content .storybook-addon-md tr {
@@ -190,6 +203,8 @@
   display: block;
   max-width: 100%;
   height: auto;
+  border: var(--sbmd-image-border, 0);
+  border-radius: var(--sbmd-radius, 0);
 }
 
 .sbdocs-content .storybook-addon-md hr {
@@ -198,6 +213,10 @@
   margin-block: var(--sbmd-heading-spacing, 1.5rem);
   border: 0;
   background: var(--sbmd-border-color, var(--sbmd-native-border-color));
+}
+
+.sbdocs-content .storybook-addon-md input[type='checkbox'] {
+  accent-color: var(--sbmd-accent-color, auto);
 }
 
 .sbdocs-content .storybook-addon-md-tags {

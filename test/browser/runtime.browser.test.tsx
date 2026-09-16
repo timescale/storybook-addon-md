@@ -2,8 +2,11 @@ import { afterEach, expect, test } from 'vitest';
 import { page } from 'vitest/browser';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react';
+import type { ComponentProps } from 'react';
+import { NAVIGATE_URL } from 'storybook/internal/core-events';
+import { addons, mockChannel } from 'storybook/preview-api';
 import { ThemeProvider, convert, themes } from 'storybook/theming';
-import { Documentation } from '../../src/runtime.js';
+import { Anchor, Documentation } from '../../src/runtime.js';
 import type { LayoutProps, MarkdownDocument } from '../../src/runtime.js';
 import '../../src/styles.css';
 
@@ -360,12 +363,21 @@ test('CSS variables control callout colors, borders, spacing, and typography', a
   expect(getComputedStyle(label.nextElementSibling!).marginTop).toBe('0px');
   expect(getComputedStyle(note.lastElementChild!).marginBottom).toBe('0px');
 
-  container.style.cssText = '--sbmd-quote-border: 2px dashed rgb(20, 21, 22)';
-  expect(getComputedStyle(caution).borderInlineStartStyle).toBe('dashed');
-  expect(getComputedStyle(caution).borderInlineStartWidth).toBe('2px');
-  expect(getComputedStyle(caution).borderInlineStartColor).not.toBe('rgb(20, 21, 22)');
+  container.style.cssText =
+    '--sbmd-quote-border: 2px dashed rgb(20, 21, 22); --sbmd-callout-background: rgb(7, 8, 9)';
+  expect(getComputedStyle(caution).borderInlineStartStyle).toBe('solid');
+  expect(getComputedStyle(caution).backgroundColor).toBe('rgb(7, 8, 9)');
   expect(getComputedStyle(container.querySelector('blockquote')!).borderInlineStartColor).toBe(
     'rgb(20, 21, 22)',
+  );
+
+  container.removeAttribute('style');
+  (caution as HTMLElement).style.cssText =
+    '--sbmd-callout-border: 3px dashed var(--sbmd-callout-accent)';
+  expect(getComputedStyle(caution).borderInlineStartStyle).toBe('dashed');
+  expect(getComputedStyle(caution).borderInlineStartWidth).toBe('3px');
+  expect(getComputedStyle(caution).borderInlineStartColor).toBe(
+    getComputedStyle(caution.querySelector('.storybook-addon-md-callout-label')!).color,
   );
 });
 
@@ -400,6 +412,55 @@ test('shared tokens drive borders, spacing, radii, and the title size', async ()
   expect(getComputedStyle(title).fontSize).toBe('41px');
 });
 
+test('element variables style the page, links, quotes, tables, and images', async () => {
+  container.style.cssText = [
+    '--sbmd-page-max-width: 100px',
+    '--sbmd-page-margin: 0 auto',
+    '--sbmd-page-padding: 12px',
+    '--sbmd-page-background: rgb(1, 1, 1)',
+    '--sbmd-accent-color: rgb(2, 2, 2)',
+    '--sbmd-link-decoration: underline 3px',
+    '--sbmd-link-underline-offset: 5px',
+    '--sbmd-radius: 9px',
+    '--sbmd-quote-background: rgb(3, 3, 3)',
+    '--sbmd-table-border: 2px dotted rgb(4, 4, 4)',
+    '--sbmd-table-heading-background: rgb(5, 5, 5)',
+    '--sbmd-image-border: 2px solid rgb(6, 6, 6)',
+  ].join('; ');
+  await render(themes.light, [
+    {
+      ...document,
+      markdown: `${document.markdown}\n\nA [link](https://example.com) and \`code\`.\n\n![Alt](data:image/gif;base64,R0lGODlhAQABAAAAACw=)\n\n- [ ] Task`,
+    },
+  ]);
+
+  const pageElement = container.querySelector<HTMLElement>('.storybook-addon-md-page')!;
+  const link = container.querySelector('a')!;
+  const quote = container.querySelector('blockquote')!;
+  const th = container.querySelector('th')!;
+  const image = container.querySelector('img')!;
+
+  expect(getComputedStyle(pageElement).maxWidth).toBe('100px');
+  expect(getComputedStyle(pageElement).marginLeft).not.toBe('0px');
+  expect(getComputedStyle(pageElement).padding).toBe('12px');
+  expect(getComputedStyle(pageElement).backgroundColor).toBe('rgb(1, 1, 1)');
+  expect(getComputedStyle(link).color).toBe('rgb(2, 2, 2)');
+  expect(getComputedStyle(link).textDecorationLine).toBe('underline');
+  expect(getComputedStyle(link).textDecorationThickness).toBe('3px');
+  expect(getComputedStyle(link).textUnderlineOffset).toBe('5px');
+  expect(getComputedStyle(quote).backgroundColor).toBe('rgb(3, 3, 3)');
+  expect(getComputedStyle(quote).borderRadius).toBe('9px');
+  expect(getComputedStyle(container.querySelector('code')!).borderRadius).toBe('9px');
+  expect(getComputedStyle(th).borderTopStyle).toBe('dotted');
+  expect(getComputedStyle(th).borderTopColor).toBe('rgb(4, 4, 4)');
+  expect(getComputedStyle(th).backgroundColor).toBe('rgb(5, 5, 5)');
+  expect(getComputedStyle(image).borderTopColor).toBe('rgb(6, 6, 6)');
+  expect(getComputedStyle(image).borderRadius).toBe('9px');
+  expect(getComputedStyle(container.querySelector('input[type="checkbox"]')!).accentColor).toBe(
+    'rgb(2, 2, 2)',
+  );
+});
+
 test('custom renderers receive callouts as GitHub alert syntax', async () => {
   const MarkdownRenderer = ({ markdown }: MarkdownDocument) => <pre>{markdown}</pre>;
 
@@ -407,4 +468,124 @@ test('custom renderers receive callouts as GitHub alert syntax', async () => {
 
   expect(container.querySelector('pre')?.textContent).toContain('> \\[!NOTE]\n> Additional');
   expect(container.querySelector('.storybook-addon-md-callout')).toBeNull();
+});
+
+const channel = mockChannel();
+
+addons.setChannel(channel);
+
+function click(element: Element, init: MouseEventInit = {}) {
+  let prevented = false;
+  const guard = (event: Event) => {
+    prevented = event.defaultPrevented;
+    event.preventDefault();
+  };
+
+  globalThis.document.addEventListener('click', guard);
+  element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ...init }));
+  globalThis.document.removeEventListener('click', guard);
+
+  return prevented;
+}
+
+async function renderAnchors(...anchors: ComponentProps<typeof Anchor>[]) {
+  root = createRoot(container);
+  await act(async () => {
+    root.render(
+      <>
+        {anchors.map((props, index) => (
+          <Anchor key={index} {...props} />
+        ))}
+      </>,
+    );
+  });
+}
+
+test('Docs links keep the manager URL and navigate through the channel on a plain click', async () => {
+  const navigations: string[] = [];
+  const listener = (url: string) => navigations.push(url);
+
+  channel.on(NAVIGATE_URL, listener);
+
+  try {
+    await render(themes.light, [
+      {
+        source: 'Links.md',
+        metadata: {},
+        markdown:
+          '[Guide](?path=/docs/guides-guide--docs#usage) [Site](https://example.com/) [Anchor](#usage)',
+      },
+    ]);
+
+    const guide = page.getByRole('link', { name: 'Guide' });
+
+    await expect
+      .element(guide)
+      .toHaveAttribute(
+        'href',
+        new URL('?path=/docs/guides-guide--docs#usage', new URL('./', window.location.href)).href,
+      );
+    await expect.element(guide).toHaveAttribute('data-link', 'docs');
+    await expect.element(guide).not.toHaveAttribute('target');
+
+    expect(click(guide.element())).toBe(true);
+    expect(navigations).toEqual(['?path=/docs/guides-guide--docs#usage']);
+
+    expect(click(guide.element(), { metaKey: true })).toBe(false);
+    expect(click(guide.element(), { button: 1 })).toBe(false);
+    expect(navigations).toHaveLength(1);
+  } finally {
+    channel.off(NAVIGATE_URL, listener);
+  }
+});
+
+test('external links open in a new tab and fragment links are untouched', async () => {
+  await render(themes.light, [
+    {
+      source: 'Links.md',
+      metadata: {},
+      markdown: '[Site](https://example.com/) [Anchor](#usage)',
+    },
+  ]);
+
+  const site = page.getByRole('link', { name: 'Site' });
+  const anchor = page.getByRole('link', { name: 'Anchor' });
+
+  await expect.element(site).toHaveAttribute('href', 'https://example.com/');
+  await expect.element(site).toHaveAttribute('target', '_blank');
+  await expect.element(site).toHaveAttribute('rel', 'noopener noreferrer');
+  await expect.element(site).toHaveAttribute('data-link', 'external');
+  expect(click(site.element())).toBe(false);
+
+  await expect.element(anchor).toHaveAttribute('href', '#usage');
+  await expect.element(anchor).not.toHaveAttribute('target');
+  await expect.element(anchor).not.toHaveAttribute('rel');
+  await expect.element(anchor).not.toHaveAttribute('data-link');
+});
+
+test('Anchor preserves explicit target and rel attributes', async () => {
+  const navigations: string[] = [];
+  const listener = (url: string) => navigations.push(url);
+
+  channel.on(NAVIGATE_URL, listener);
+
+  try {
+    await renderAnchors(
+      { href: 'https://example.com/', target: '_self', rel: 'me', children: 'Site' },
+      { href: '?path=/docs/guides-guide--docs', target: '_blank', children: 'Guide' },
+    );
+
+    const site = page.getByRole('link', { name: 'Site' });
+    const guide = page.getByRole('link', { name: 'Guide' });
+
+    await expect.element(site).toHaveAttribute('target', '_self');
+    await expect.element(site).toHaveAttribute('rel', 'me');
+    await expect.element(guide).toHaveAttribute('target', '_blank');
+    await expect.element(guide).toHaveAttribute('data-link', 'docs');
+
+    expect(click(guide.element())).toBe(false);
+    expect(navigations).toEqual([]);
+  } finally {
+    channel.off(NAVIGATE_URL, listener);
+  }
 });

@@ -602,3 +602,136 @@ test('tagFields rejects invalid configuration', async (t) => {
     );
   }
 });
+
+test('links rewrite document and repository targets while images stay assets', async (t) => {
+  const { config, put, root } = await fixture(t);
+
+  await put('docs/guide.md', '---\ntitle: Guides/Getting Started\n---\n# Guide');
+  await put('docs/other.md', '# Other');
+  await put('docs/icon.svg', '<svg/>');
+  await put('src/util.ts', 'export const value = 1;');
+  await put('src/lib/index.ts', 'export {};');
+  await put(
+    'components/Button.stories.tsx',
+    "export default { title: 'Components/Button' };\nexport const Primary = {};",
+  );
+  await put('components/Button.metadata.md', 'Button docs');
+  await put('components/Untitled.stories.tsx', 'export default {};\nexport const Primary = {};');
+  await put('components/Untitled.metadata.md', 'Untitled docs');
+  await put(
+    'docs/index.md',
+    [
+      '[Guide](./guide.md#usage)',
+      '[Other](other.md?x=1)',
+      '[Button](../components/Button.metadata.md)',
+      '[Untitled](../components/Untitled.metadata.md)',
+      '[Util](../src/util.ts#L1)',
+      '[Folder](../src/lib)',
+      '![Icon](./icon.svg)',
+      '[Ref][icon] ![Ref][icon]',
+      '[Absolute](https://example.com/a.md) [Root](/docs/guide.md)',
+      '',
+      '[icon]: ./icon.svg',
+    ].join('\n\n'),
+  );
+
+  const repository = 'https://github.com/acme/repo/blob/main/';
+  const documents = await discover({ ...config, links: { repository } });
+  const index = documents.find((document) => document.source === 'docs/index.md')!;
+
+  assert.match(index.markdown, /\[Guide\]\(\?path=\/docs\/guides-getting-started--docs#usage\)/);
+  assert.match(index.markdown, /\[Other\]\(\?path=\/docs\/documentation-docs-other--docs\?x=1\)/);
+  assert.match(index.markdown, /\[Button\]\(\?path=\/docs\/components-button--docs\)/);
+  assert.match(
+    index.markdown,
+    /\[Untitled\]\(\?path=\/docs\/story:components\/Untitled\.stories\.tsx\)/,
+  );
+  assert.match(
+    index.markdown,
+    /\[Util\]\(https:\/\/github\.com\/acme\/repo\/blob\/main\/src\/util\.ts#L1\)/,
+  );
+  assert.match(
+    index.markdown,
+    /\[Folder\]\(https:\/\/github\.com\/acme\/repo\/blob\/main\/src\/lib\)/,
+  );
+  assert.match(index.markdown, /!\[Icon\]\(SBMDASSET0END\)/);
+  assert.match(index.markdown, /\[icon\]: SBMDASSET1END/);
+  assert.match(index.markdown, /https:\/\/example\.com\/a\.md/);
+  assert.match(index.markdown, /\/docs\/guide\.md/);
+  assert.deepEqual(
+    index.assets.map((asset) => asset.file),
+    [path.join(root, 'docs/icon.svg'), path.join(root, 'docs/icon.svg')],
+  );
+  assert.equal(index.original, await readFile(path.join(root, 'docs/index.md'), 'utf8'));
+
+  const named = await discover({ ...config, docsName: 'Reference', links: { repository } });
+
+  assert.match(
+    named.find((document) => document.source === 'docs/index.md')!.markdown,
+    /guides-getting-started--reference.*components-button--reference/s,
+  );
+
+  const onlyRepository = await discover({
+    ...config,
+    links: { documents: false, repository },
+  });
+
+  assert.match(
+    onlyRepository.find((document) => document.source === 'docs/index.md')!.markdown,
+    /\[Guide\]\(https:\/\/github\.com\/acme\/repo\/blob\/main\/docs\/guide\.md#usage\)/,
+  );
+
+  await put('docs/broken.md', '[Missing](./missing.ts)');
+  await assert.rejects(
+    discover({ ...config, links: { repository } }),
+    /broken.md: missing link target/,
+  );
+  await put('docs/broken.md', '[Folder](../src/lib)');
+  await assert.rejects(discover({ ...config, links: {} }), /broken.md: missing local asset/);
+});
+
+test('generated content modules emit rewritten links as plain strings', async (t) => {
+  const { config, put } = await fixture(t);
+
+  await put('docs/guide.md', '---\ntitle: Guides/Guide\n---\n# Guide');
+  await put('src/util.ts', 'export {};');
+  await put('docs/index.md', '[Guide](./guide.md) [Util](../src/util.ts) ![Icon](./icon.svg)');
+  await put('docs/icon.svg', '<svg/>');
+  await generate({ ...config, links: { repository: 'https://example.com/repo/blob/main' } });
+
+  const modules = await Promise.all(
+    (await readdir(config.output))
+      .filter((name) => name.startsWith('content-'))
+      .map((name) => readFile(path.join(config.output, name), 'utf8')),
+  );
+  const index = modules.find((content) => content.includes(`source: "docs/index.md"`))!;
+
+  assert.ok(index, 'Expected index content module');
+  assert.match(index, /\?path=\/docs\/guides-guide--docs/);
+  assert.match(index, /https:\/\/example\.com\/repo\/blob\/main\/src\/util\.ts/);
+  assert.equal(index.match(/^import /gm)?.length, 1);
+  assert.match(index, /import asset0 from ".*icon\.svg\?url&no-inline"/);
+  assert.doesNotMatch(index, /import .*(guide\.md|util\.ts)/);
+});
+
+test('links rejects malformed configuration', async (t) => {
+  const { root } = await fixture(t);
+
+  for (const links of [
+    'https://example.com',
+    ['https://example.com'],
+    null,
+    { documents: 'yes' },
+    { repository: 'github.com/acme/repo' },
+    { repository: '' },
+    { pages: true },
+  ]) {
+    await assert.rejects(
+      Reflect.apply(stories, undefined, [
+        [],
+        { configDir: path.join(root, '.storybook'), patterns: ['**/*.md'], links },
+      ]),
+      /links must be an object/,
+    );
+  }
+});
