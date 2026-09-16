@@ -71,6 +71,6 @@ await writeFile('package.json', `${JSON.stringify(packageJson, null, 2)}\n`);
 await run('git', ['add', 'package.json']);
 await run('git', ['commit', '-m', `release: ${tag}`]);
 await run('git', ['tag', '-a', tag, '-m', tag]);
-await run('git', ['push', '--follow-tags']);
+await run('git', ['push', '--atomic', '--follow-tags', 'origin', 'main']);
 
 console.log(`Released ${tag}.`);
