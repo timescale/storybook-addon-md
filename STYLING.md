@@ -90,6 +90,8 @@ Five tokens cover most of the page. Element variables fall back to them, so set 
 
 Status chips have `data-status` set to the original frontmatter value. Override `--sbmd-tag-*` on selectors such as `.storybook-addon-md-tag[data-status="stable" i]` to assign a status-specific appearance.
 
+Links carry `data-link="docs"` for Storybook Docs pages and `data-link="external"` for absolute `http:` and `https:` URLs, so a stylesheet can mark external links or hide the distinction. Fragment links and other hrefs have no `data-link`.
+
 Callouts are `.storybook-addon-md-callout` elements with `data-callout` set to `note`, `tip`, `important`, `warning`, or `caution`, and a `.storybook-addon-md-callout-label` paragraph. The addon sets `--sbmd-callout-accent` on each callout from its type’s accent variable, and uses it for the default border and the label color. Per-type accent variables default to Storybook theme colors chosen for the light or dark base.
 
 Properties without a variable use ordinary CSS. Match the addon’s specificity for properties it sets, for example `.sbdocs-content .storybook-addon-md h2` for heading letter spacing or `.sbdocs-content .storybook-addon-md-tags` for the tag gap.
@@ -203,6 +205,18 @@ export function MarkdownRenderer(document: MarkdownDocument) {
 ```
 
 `MarkdownRenderer` receives `{ markdown, metadata, source, heading? }`: processed Markdown with resolved asset URLs, preserved frontmatter, and the source path relative to the project folder.
+
+`Anchor` is the link component used by `DefaultMarkdownRenderer`. It navigates the manager for Docs links, opens external links in a new tab, sets `data-link`, and keeps explicit `target` and `rel` attributes. Reuse it in a custom renderer's `overrides` so links keep the same behavior:
+
+```tsx
+import { Markdown } from '@storybook/addon-docs/blocks';
+import { Anchor } from 'storybook-addon-md/runtime';
+import type { MarkdownDocument } from 'storybook-addon-md/runtime';
+
+export function MarkdownRenderer({ markdown }: MarkdownDocument) {
+  return <Markdown options={{ overrides: { a: Anchor } }}>{markdown}</Markdown>;
+}
+```
 
 Callouts are rendered by `DefaultMarkdownRenderer`. A custom `MarkdownRenderer` receives them as ordinary blockquotes whose first line is the `[!NOTE]` marker, serialized as `\[!NOTE]` so that renderers treat the brackets as text. Render callouts yourself or delegate to `DefaultMarkdownRenderer`. Custom layouts are unaffected because callouts are part of `children`.
 

@@ -204,10 +204,12 @@ By default every relative link is bundled as an asset, so a link to another Mark
 }
 ```
 
-| Field        | Default | Behavior                                                                                                                 |
-| ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `documents`  | `true`  | Links to discovered Markdown documents become ordinary links to their Docs page in the manager, opened in the top frame. |
-| `repository` | None    | Links to other files or folders inside the project folder become `<repository>/<path relative to root>` links.           |
+| Field        | Default | Behavior                                                                                                       |
+| ------------ | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `documents`  | `true`  | Links to discovered Markdown documents become ordinary links to their Docs page in the manager.                |
+| `repository` | None    | Links to other files or folders inside the project folder become `<repository>/<path relative to root>` links. |
+
+Rendered links behave correctly without a click handler in your Layout. Docs links keep the absolute manager URL as `href`, so copying, middle-clicking, and opening in a new tab work as usual, and a plain left click asks the manager to navigate without reloading the preview. Modified clicks fall through to the browser. Absolute `http:` and `https:` links, including every `repository` link, open in a new tab with `rel="noopener noreferrer"`. Fragment links are left untouched, and explicit `target` or `rel` attributes from a custom renderer are never overridden.
 
 Fragments and query strings are preserved. Attached documents link to their story file's Docs page using the CSF `title`; when the story file has no explicit title, the link falls back to the `story:<path>` key and will not resolve until a title is set. Images and image reference definitions remain bundled assets, and manifests keep the original Markdown. Relative links to files outside root, or to missing files, still fail the build. Without `links`, behavior is unchanged.
 
