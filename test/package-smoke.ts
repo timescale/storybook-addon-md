@@ -38,7 +38,7 @@ try {
       type: 'module',
       packageManager: 'nub@0.7.5',
       devDependencies: {
-        'storybook-addon-md': `file:${filename}`,
+        '@tigerdata/storybook-addon-md': `file:${filename}`,
         '@storybook/addon-docs': '10.6.0',
         '@storybook/addon-mcp': '10.6.0',
         '@storybook/react-vite': '10.6.0',
@@ -90,7 +90,7 @@ try {
       `
     import assert from 'node:assert/strict';
     import { readFile } from 'node:fs/promises';
-    import { parseMarkdown, readMarkdown, resolveStoryAssociations } from 'storybook-addon-md/node';
+    import { parseMarkdown, readMarkdown, resolveStoryAssociations } from '@tigerdata/storybook-addon-md/node';
     const document = await readMarkdown('components/Button.metadata.md', process.cwd());
     assert.equal(document.original, await readFile(document.file, 'utf8'));
     assert.equal(document.metadata.status, 'Stable');

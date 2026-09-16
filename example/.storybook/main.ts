@@ -1,12 +1,12 @@
 import tailwindcss from '@tailwindcss/vite';
 import type { StorybookConfig } from '@storybook/react-vite';
-import type { MarkdownOptions } from 'storybook-addon-md';
+import type { MarkdownOptions } from '@tigerdata/storybook-addon-md';
 
 export const markdownOptions = {
   patterns: ['docs/**/*.md', 'components/**/*.md', '!docs/drafts/**'],
   generatedDir: 'example-markdown-generated',
   stylesheet: '.storybook/markdown.css',
-  links: { repository: 'https://github.com/ruijdacd/storybook-addon-md/blob/main/example' },
+  links: { repository: 'https://github.com/timescale/storybook-addon-md/blob/main/example' },
 } satisfies MarkdownOptions;
 
 const config: StorybookConfig = {
@@ -15,7 +15,7 @@ const config: StorybookConfig = {
   addons: [
     '@storybook/addon-docs',
     {
-      name: 'storybook-addon-md',
+      name: '@tigerdata/storybook-addon-md',
       options: markdownOptions,
     },
   ],

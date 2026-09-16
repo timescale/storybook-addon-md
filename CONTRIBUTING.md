@@ -42,7 +42,7 @@ After CI passes on `main`, Changesets opens or updates a release PR with the ver
 
 The release workflow checks out the exact commit that passed CI. A read-only job selects the release mode and builds and packs unpublished packages. Separate jobs update the release PR or publish the packed artifact. Only the publish job receives an npm OIDC token, and it skips lifecycle scripts. Checkouts do not retain GitHub credentials, privileged jobs disable dependency caches, and Dependabot keeps workflow action SHA pins up to date.
 
-npm trusted publishing is configured for `ruijdacd/storybook-addon-md`, workflow `release.yml`, with no environment. No `NPM_TOKEN` secret is needed. GitHub Actions must be allowed to create and approve pull requests in the repository settings.
+npm trusted publishing is configured for `timescale/storybook-addon-md`, workflow `release.yml`, with no environment. No `NPM_TOKEN` secret is needed. GitHub Actions must be allowed to create and approve pull requests in the repository settings.
 
 Release PRs created with GitHub’s automatic token do not trigger PR workflows. If required checks block merging, close and reopen the PR yourself to trigger them. The release workflow always waits for CI on the merged commit.
 
