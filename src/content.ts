@@ -262,6 +262,15 @@ export async function resolveAssets(
   return { markdown: markdown.stringify(tree), assets, heading };
 }
 
+/** The directory a glob starts from: its leading literal segments. */
+export function patternRoot(root: string, pattern: string) {
+  const segments = path.posix.normalize(pattern).split('/');
+  const firstGlob = segments.findIndex((segment) => /[*?[\]{}()!]/.test(segment));
+  const base = (firstGlob === -1 ? segments.slice(0, -1) : segments.slice(0, firstGlob)).join('/');
+
+  return path.resolve(root, base || '.');
+}
+
 export async function discover({ root, patterns, output, links, docsName }: ContentOptions) {
   if (
     !Array.isArray(patterns) ||
