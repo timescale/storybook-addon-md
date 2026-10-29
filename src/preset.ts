@@ -253,7 +253,10 @@ export async function viteFinal(config: UserConfig, options: PresetOptions): Pro
 }
 
 export function webpackFinal() {
-  throw fail('builder', 'only @storybook/react-vite 10.6.0 with Vite 7 is supported');
+  throw fail(
+    'builder',
+    'only @storybook/react-vite 10.6 or newer with Vite 7 or newer is supported',
+  );
 }
 
 export const experimental_manifests = (async (
