@@ -17,10 +17,10 @@ Write ordinary `.md` files and browse them inside Storybook. Attach documentatio
 We recommend [ni](https://github.com/antfu-collective/ni#readme) to install dependencies with your project's package manager. Install it first with `npm install -g @antfu/ni`, then run:
 
 ```sh
-ni -D @tigerdata/storybook-addon-md @storybook/addon-docs@10.6.0
+ni -D @tigerdata/storybook-addon-md @storybook/addon-docs
 ```
 
-Tested with **Storybook 10.6.0**, **React Vite 10.6.0**, **Vite 7.3.6**, and **React 19.2.4**. Requires Node 22.13+. Other builders and renderers are not tested.
+Supports **Storybook 10.6.2+**, **React Vite 10.6+**, **Vite 7.3.6+**, and **React 19**. Peer ranges are open-ended, so newer Storybook and Vite releases install without overrides. Tested with Storybook and React Vite 10.6.0 through 10.6.5, Vite 7.3.6 and 8.3.5, and React 19.2.4 and 19.3.1. Requires Node 22.13+. Other builders and renderers are not tested.
 
 Add the addon after `@storybook/addon-docs` in `.storybook/main.ts`:
 
@@ -78,7 +78,7 @@ export default {
 };
 ```
 
-Storybook 10.6.0 replaces project-level Autodocs with the attached Markdown page. Components without Markdown keep ordinary Autodocs. Use `tags: ['!autodocs']` on components that should not have automatic docs. Component-only or story-only `autodocs` tags conflict with attached MDX in this Storybook version; move the enabling tag to the preview. Native props and examples on Markdown pages do not require an `autodocs` tag.
+Storybook 10.6 replaces project-level Autodocs with the attached Markdown page. Components without Markdown keep ordinary Autodocs. Use `tags: ['!autodocs']` on components that should not have automatic docs. Component-only or story-only `autodocs` tags conflict with attached MDX in this Storybook version; move the enabling tag to the preview. Native props and examples on Markdown pages do not require an `autodocs` tag.
 
 Authored MDX keeps its title and explicit `name`. Additional attached MDX pages can use a distinct name such as `<Meta of={ButtonStories} name="Design notes" />`. An authored page using the default docs name for the same component conflicts with the addon page: keep the authored page and exclude that component's Markdown from `patterns` (or remove its association). The addon does not overwrite authored pages.
 
@@ -266,13 +266,13 @@ const config: StorybookConfig = {
 
 Use MCP's `docs-list` to find IDs, then `docs-show` with a component ID (for attached guidance) or standalone documentation ID.
 
-For MCP access, install `@storybook/addon-mcp@10.6.0` and connect your MCP client to `http://localhost:6006/mcp`. Its Get Documentation tool is named `docs-show` in 10.6.0. Omit that addon if you only need JSON manifests. It is not a dependency of `@tigerdata/storybook-addon-md`.
+For MCP access, install `@storybook/addon-mcp` and connect your MCP client to `http://localhost:6006/mcp`. Its Get Documentation tool is named `docs-show` in 10.6. Omit that addon if you only need JSON manifests. It is not a dependency of `@tigerdata/storybook-addon-md`.
 
-With Storybook and React Vite **10.6.0**, standalone Markdown appears in `/manifests/docs.json`, and attached Markdown appears in the component's `docs` in `/manifests/components.json`. Both development and static builds include the complete original source, including frontmatter. Development updates use the existing file watcher. Shared documents appear under each associated component; multiple documents on one page are joined in discovery order with two newlines. String `description` values supply optional summaries.
+With Storybook and React Vite **10.6**, standalone Markdown appears in `/manifests/docs.json`, and attached Markdown appears in the component's `docs` in `/manifests/components.json`. Both development and static builds include the complete original source, including frontmatter. Development updates use the existing file watcher. Shared documents appear under each associated component; multiple documents on one page are joined in discovery order with two newlines. String `description` values supply optional summaries.
 
 Keep this addon after `@storybook/addon-docs`. Consumers can remove custom manifest presets that supplied Markdown content after enabling this option. Unrelated MDX, Autodocs, and other manifest fields are preserved. Storybook's manifest tag filtering still applies.
 
-This integration uses Storybook 10.6.0's experimental preset hook and inline (v0) manifests. Other Storybook versions and `features.experimentalDocgenServer` service-backed manifests are unsupported. Markdown links and assets remain as authored in manifest content. See [Storybook manifests](https://storybook.js.org/docs/ai/manifests) for the upstream feature.
+This integration uses Storybook 10.6's experimental preset hook and inline (v0) manifests. Other Storybook versions and `features.experimentalDocgenServer` service-backed manifests are unsupported. Markdown links and assets remain as authored in manifest content. See [Storybook manifests](https://storybook.js.org/docs/ai/manifests) for the upstream feature.
 
 ## Styling
 
