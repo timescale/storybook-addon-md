@@ -24,6 +24,10 @@ test('development: additions after startup appear in the sidebar, update, and di
     await expect.poll(async () => Boolean((await index())['guides-added-live--docs'])).toBeTruthy();
     await expect(page.getByText('Added live', { exact: true })).toBeVisible();
 
+    // Storybook reads its story importers when the preview loads, so a page that returns after
+    // an earlier removal needs a fresh load before Storybook can render it.
+    await page.reload();
+
     await page.getByText('Added live', { exact: true }).click();
 
     await expect(preview.getByRole('heading', { name: 'Added after startup' })).toBeVisible();
