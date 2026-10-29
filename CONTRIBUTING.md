@@ -8,7 +8,7 @@ Use Node 24.11+ and the repository's `./bun` wrapper. It downloads the pinned [B
 ./bun run storybook
 ```
 
-Bun installs and runs scripts; tests, Storybook, and the build still run on Node. CI installs from `bun.lock` with `--frozen-lockfile --ignore-scripts`.
+Bun installs and runs scripts; tests, Storybook, and the build still run on Node. CI installs from `bun.lock` with `--frozen-lockfile --ignore-scripts`. `bunfig.toml` sets `install.minimumReleaseAge` to 7 days, so Bun refuses package versions published in the last week unless you pass `--minimum-release-age 0`; versions already pinned in `bun.lock` still install. Renovate waits the same 7 days before it opens dependency updates.
 
 The package build uses [tsdown](https://tsdown.dev) to emit ESM and TypeScript declarations and copy `src/styles.css` into `dist/`. `./bun run check` runs the build followed by TypeScript type-checking.
 
