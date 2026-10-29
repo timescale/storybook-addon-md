@@ -8,7 +8,7 @@ import { watch } from 'chokidar';
 import picomatch from 'picomatch';
 import { updateManifests } from './manifest.js';
 import { generate, writeChanged } from './generator.js';
-import { fail, slash } from './content.js';
+import { fail, patternRoot, slash } from './content.js';
 
 type PresetOptions = MarkdownOptions & {
   configDir: string;
@@ -133,6 +133,12 @@ export function watchDocumentation(
   const configuredDependencies = [config.presentation, config.stylesheet].filter(
     (file): file is string => Boolean(file),
   );
+  const watchRoots = [
+    ...new Set([
+      ...positive.map((pattern) => patternRoot(config.root, pattern)),
+      ...configuredDependencies,
+    ]),
+  ];
 
   let timer: ReturnType<typeof setTimeout> | undefined;
   let closed = false;
@@ -172,12 +178,14 @@ export function watchDocumentation(
           `throw new Error(${JSON.stringify(error.message)});\n`,
         );
         onError(error);
+      } finally {
+        watcher.add([...dependencies]);
       }
     });
 
     return queue;
   };
-  const watcher = watch(config.root, {
+  const watcher = watch(watchRoots, {
     ignoreInitial: true,
     ignored: (file) =>
       file === config.output ||

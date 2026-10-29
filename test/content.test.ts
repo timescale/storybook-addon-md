@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, rm, readdir } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { discover, parseMarkdown, resolveAssets } from '../src/content.ts';
+import { discover, parseMarkdown, patternRoot, resolveAssets } from '../src/content.ts';
 import { readMarkdown, resolveStoryAssociations } from '../src/node.ts';
 import { generate } from '../src/generator.ts';
 import { stories, watchDocumentation } from '../src/preset.ts';
@@ -41,6 +41,17 @@ async function until(check: () => boolean | Promise<boolean>) {
 
   assert.fail('Timed out waiting for file watcher');
 }
+
+test('pattern roots stop at the leading literal directory of each glob', () => {
+  const root = path.join(os.tmpdir(), 'sbmd-roots');
+
+  assert.equal(patternRoot(root, 'src/**/*.metadata.md'), path.join(root, 'src'));
+  assert.equal(patternRoot(root, './docs/**/*.md'), path.join(root, 'docs'));
+  assert.equal(patternRoot(root, 'docs/guides/intro.md'), path.join(root, 'docs/guides'));
+  assert.equal(patternRoot(root, '**/*.md'), root);
+  assert.equal(patternRoot(root, '!(docs)/**/*.md'), root);
+  assert.equal(patternRoot(root, 'docs-{a,b}/**/*.md'), root);
+});
 
 test('optional lowercase frontmatter preserves custom fields and literal content', () => {
   assert.deepEqual(parseMarkdown('# Hello {value} <Button />', 'doc.md'), {
@@ -412,6 +423,29 @@ test('watcher recovers when a new metadata document gains its missing sibling', 
   await put('New.stories.tsx', 'export default {};');
   await until(() => updates === 2);
   assert.equal(await readFile(path.join(config.output, 'status.js'), 'utf8'), 'export {};\n');
+});
+
+test('watcher follows new directories under the pattern roots and their references', async (t) => {
+  const { config, put } = await fixture(t);
+  const scoped = { ...config, patterns: ['docs/**/*.md'] };
+
+  await put('components/Button.stories.tsx', 'export default {};');
+  await put(
+    'docs/Button.metadata.md',
+    '---\nstories: ../components/Button.stories.tsx\n---\nOverview',
+  );
+
+  let updates = 0;
+  const watcher = watchDocumentation(scoped, { onUpdate: () => updates++ });
+  t.onTestFinished(() => watcher.close());
+  await watcher.ready;
+  const initialUpdates = updates;
+
+  await put('docs/new/deep/page.md', '# Page');
+  await until(() => updates === initialUpdates + 1);
+
+  await put('components/Button.stories.tsx', 'export default { title: "Button" };');
+  await until(() => updates === initialUpdates + 2);
 });
 
 test('reserved asset filenames build, serve, update, and clean up through safe copies', async (t) => {
