@@ -1,0 +1,4 @@
+[install]
+# Ignore package versions published less than 7 days ago (604800 seconds).
+# Versions already pinned in bun.lock still install normally.
+minimumReleaseAge = 604800
